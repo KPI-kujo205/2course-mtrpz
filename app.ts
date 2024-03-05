@@ -1,12 +1,16 @@
 import { readFileSync } from "fs";
 import * as process from "process";
-
+import { TPreformattedEntry } from "./types";
 import minimist from "minimist";
 import * as console from "console";
 
 function main() {
 	const pathToFile = getFilePath();
 	const fileContent = readFileSync(pathToFile).toString();
+
+	const html = parseMarkdown(fileContent);
+
+	console.log(html);
 }
 
 function getFilePath() {
@@ -21,6 +25,23 @@ function getFilePath() {
 	}
 
 	return args._[0] as string;
+}
+
+function parseMarkdown(markdown: string) {
+	let formattedMarkdown = markdown;
+	// let html = "";
+
+	const preformattedEntries: TPreformattedEntry[] = [];
+
+	formattedMarkdown = markdown.replace(/(`+)([^`]+)\1/g, (match) => {
+		preformattedEntries.push({
+			index: preformattedEntries.length + 1,
+			value: match,
+		});
+		return `@pre${preformattedEntries.length}`;
+	});
+
+	return formattedMarkdown;
 }
 
 try {
