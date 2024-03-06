@@ -38,6 +38,7 @@ function parseMarkdown(markdown: string) {
 
 	const tagMatches = getTagMatches(formattedMarkdown);
 	checkForNestedTags(tagMatches);
+	checkForNotClosedTags(tagMatches);
 
 	return formattedMarkdown;
 }
@@ -46,7 +47,7 @@ function replacePreformattedEntries(
 	markdown: string,
 	preformattedEntries: TPreformattedEntry[],
 ) {
-	return markdown.replace(/(`+)([^`]+)\1/g, (match) => {
+	return markdown.replace(/(```+)([^`]+)\1/g, (match) => {
 		preformattedEntries.push({
 			index: preformattedEntries.length + 1,
 			value: match,
@@ -89,6 +90,29 @@ function checkForNestedTags(matches: TTagMatch[]) {
 	}
 
 	return false;
+}
+
+function checkForNotClosedTags(matches: TTagMatch[]) {
+	const stack: string[] = [];
+
+	for (const match of matches) {
+		if (stack.length === 0) {
+			stack.push(match.entry);
+			continue;
+		}
+
+		const lastEntry = stack[stack.length - 1];
+
+		if (lastEntry === match.entry) {
+			stack.pop();
+		} else {
+			stack.push(match.entry);
+		}
+	}
+
+	if (stack.length > 0) {
+		throw new Error("Error: not closed tags found!");
+	}
 }
 
 try {
