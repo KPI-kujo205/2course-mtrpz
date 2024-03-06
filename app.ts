@@ -37,6 +37,7 @@ function parseMarkdown(markdown: string) {
 	);
 
 	const tagMatches = getTagMatches(formattedMarkdown);
+	checkForNestedTags(tagMatches);
 
 	return formattedMarkdown;
 }
@@ -57,7 +58,6 @@ function getTagMatches(markdown: string) {
 	let match: RegExpExecArray | null;
 
 	const matches: TTagMatch[] = [];
-
 	const regex = /(\*\*|_|`)/g;
 
 	while ((match = regex.exec(markdown)) !== null) {
@@ -65,6 +65,30 @@ function getTagMatches(markdown: string) {
 	}
 
 	return matches;
+}
+
+function checkForNestedTags(matches: TTagMatch[]) {
+	const stack: string[] = [];
+
+	for (const match of matches) {
+		if (stack.length === 0) {
+			stack.push(match.entry);
+			continue;
+		}
+
+		const lastEntry = stack[stack.length - 1];
+
+		if (lastEntry === match.entry) {
+			if (stack.length > 1) {
+				throw new Error("Error: nested tags are not allowed!");
+			}
+			stack.pop();
+		} else {
+			stack.push(match.entry);
+		}
+	}
+
+	return false;
 }
 
 try {
