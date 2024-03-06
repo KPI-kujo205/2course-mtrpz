@@ -1,6 +1,6 @@
 import { readFileSync } from "fs";
 import * as process from "process";
-import { TPreformattedEntry } from "./types";
+import { TPreformattedEntry, TTagMatch } from "./types";
 import minimist from "minimist";
 import * as console from "console";
 
@@ -29,19 +29,42 @@ function getFilePath() {
 
 function parseMarkdown(markdown: string) {
 	let formattedMarkdown = markdown;
-	// let html = "";
-
 	const preformattedEntries: TPreformattedEntry[] = [];
 
-	formattedMarkdown = markdown.replace(/(`+)([^`]+)\1/g, (match) => {
+	formattedMarkdown = replacePreformattedEntries(
+		formattedMarkdown,
+		preformattedEntries,
+	);
+
+	const tagMatches = getTagMatches(formattedMarkdown);
+
+	return formattedMarkdown;
+}
+
+function replacePreformattedEntries(
+	markdown: string,
+	preformattedEntries: TPreformattedEntry[],
+) {
+	return markdown.replace(/(`+)([^`]+)\1/g, (match) => {
 		preformattedEntries.push({
 			index: preformattedEntries.length + 1,
 			value: match,
 		});
 		return `@pre${preformattedEntries.length}`;
 	});
+}
+function getTagMatches(markdown: string) {
+	let match: RegExpExecArray | null;
 
-	return formattedMarkdown;
+	const matches: TTagMatch[] = [];
+
+	const regex = /(\*\*|_|`)/g;
+
+	while ((match = regex.exec(markdown)) !== null) {
+		matches.push({ entry: match[0], index: match.index });
+	}
+
+	return matches;
 }
 
 try {
