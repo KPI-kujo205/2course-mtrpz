@@ -1,19 +1,26 @@
-import { readFileSync } from "fs";
+import { readFileSync, writeFileSync } from "fs";
 import * as process from "process";
 import { TPreformattedEntry } from "./types";
 import minimist from "minimist";
 import * as console from "console";
 
 function main() {
-	const pathToFile = getFilePath();
-	const fileContent = readFileSync(pathToFile).toString();
-
+	const pathToInputFile = getInputFilePath();
+	const fileContent = readFileSync(pathToInputFile).toString();
 	const html = parseMarkdown(fileContent);
 
-	console.log(html);
+	const pathToOutputFile = getOutputFilePath();
+
+	if (!pathToOutputFile) {
+		console.log(html);
+		return;
+	}
+
+	const page = getPage(html);
+	writeFileSync(pathToOutputFile, page);
 }
 
-function getFilePath() {
+function getInputFilePath() {
 	const args = minimist(process.argv.slice(2));
 
 	if (args._.length === 0) {
@@ -39,6 +46,11 @@ function parseMarkdown(markdown: string) {
 	formattedMarkdown = replaceOpeningAndClosingMTags(formattedMarkdown);
 
 	formattedMarkdown = replaceParagraphs(formattedMarkdown);
+
+	formattedMarkdown = insertPreformattedEntries(
+		formattedMarkdown,
+		preformattedEntries,
+	);
 
 	return formattedMarkdown;
 }
@@ -107,6 +119,27 @@ function replaceParagraphs(markdown: string) {
 	}
 
 	return output;
+}
+
+function insertPreformattedEntries(
+	markdown: string,
+	preformattedEntries: TPreformattedEntry[],
+) {
+	let result = markdown;
+	for (const entry of preformattedEntries) {
+		const valueWithTag = `<pre>${entry.value.replaceAll(/`/g, "")}</pre>`;
+		result = markdown.replace(new RegExp(`@pre${entry.index}`), valueWithTag);
+	}
+	return result;
+}
+
+function getOutputFilePath() {
+	const args = minimist(process.argv.slice(2));
+	return args?.out as string;
+}
+
+function getPage(content: string) {
+	return `<!DOCTYPE html><html><head><title>Document</title></head><body>${content}</body></html>`;
 }
 
 try {
