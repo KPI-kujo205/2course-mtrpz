@@ -1,6 +1,6 @@
 import { readFileSync } from "fs";
 import * as process from "process";
-import { TPreformattedEntry, TTagMatch } from "./types";
+import { TPreformattedEntry } from "./types";
 import minimist from "minimist";
 import * as console from "console";
 
@@ -36,9 +36,9 @@ function parseMarkdown(markdown: string) {
 		preformattedEntries,
 	);
 
-	const tagMatches = getTagMatches(formattedMarkdown);
-	checkForNestedTags(tagMatches);
-	checkForNotClosedTags(tagMatches);
+	formattedMarkdown = replaceOpeningAndClosingMTags(formattedMarkdown);
+
+	formattedMarkdown = replaceParagraphs(formattedMarkdown);
 
 	return formattedMarkdown;
 }
@@ -55,64 +55,58 @@ function replacePreformattedEntries(
 		return `@pre${preformattedEntries.length}`;
 	});
 }
-function getTagMatches(markdown: string) {
-	let match: RegExpExecArray | null;
 
-	const matches: TTagMatch[] = [];
-	const regex = /(\*\*|_|`)/g;
+function replaceOpeningAndClosingMTags(markdown: string) {
+	const tagsRegex = getTagsRegex("(\\w*)");
 
-	while ((match = regex.exec(markdown)) !== null) {
-		matches.push({ entry: match[0], index: match.index });
-	}
-
-	return matches;
-}
-
-function checkForNestedTags(matches: TTagMatch[]) {
-	const stack: string[] = [];
-
-	for (const match of matches) {
-		if (stack.length === 0) {
-			stack.push(match.entry);
-			continue;
-		}
-
-		const lastEntry = stack[stack.length - 1];
-
-		if (lastEntry === match.entry) {
-			if (stack.length > 1) {
-				throw new Error("Error: nested tags are not allowed!");
+	return markdown.replaceAll(
+		tagsRegex,
+		(match, leftTag, content, rightTag, _offset, _string, _groups) => {
+			if (leftTag !== rightTag) {
+				throw new Error(
+					`Invalid opening and closing tags or nested tags detected (${match})`,
+				);
 			}
-			stack.pop();
-		} else {
-			stack.push(match.entry);
-		}
-	}
 
-	return false;
+			if (content.match(tagsRegex))
+				throw new Error(`Tag nesting is forbidden ${match}`);
+
+			if (content.trim().length === 0)
+				throw new Error(`Empty tags are forbidden ${match}`);
+
+			return replaceTagsWithHTML(leftTag, content);
+		},
+	);
 }
 
-function checkForNotClosedTags(matches: TTagMatch[]) {
-	const stack: string[] = [];
+function getTagsRegex(innerContent: string) {
+	const tag = "\\*\\*|_|`";
+	return new RegExp(`(${tag})${innerContent}(${tag})`, "g");
+}
 
-	for (const match of matches) {
-		if (stack.length === 0) {
-			stack.push(match.entry);
-			continue;
-		}
+function replaceTagsWithHTML(tag: string, content: string) {
+	switch (tag) {
+		case "**":
+			return `<b>${content}</b>`;
+		case "_":
+			return `<i>${content}</i>`;
+		case "`":
+			return `<tt>${content}</tt>`;
+		default:
+			throw new Error(`Invalid tag: ${tag}`);
+	}
+}
 
-		const lastEntry = stack[stack.length - 1];
+function replaceParagraphs(markdown: string) {
+	let output = "";
+	const paragraphContents = markdown.split("\n");
 
-		if (lastEntry === match.entry) {
-			stack.pop();
-		} else {
-			stack.push(match.entry);
-		}
+	for (const content of paragraphContents) {
+		if (content.trim().length === 0) continue;
+		output += `<p>${content}</p>`;
 	}
 
-	if (stack.length > 0) {
-		throw new Error("Error: not closed tags found!");
-	}
+	return output;
 }
 
 try {

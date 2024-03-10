@@ -3,6 +3,6 @@ type TPreformattedEntry = {
 	value: string;
 };
 
-type TTagMatch = { entry: string; index: number };
+type TTagMatch = { entry: string; startIndex: number };
 
 export type { TPreformattedEntry, TTagMatch };
