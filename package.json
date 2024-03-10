@@ -1,21 +1,21 @@
 {
-  "name": "md-to-html",
-  "version": "1.0.0",
-  "description": "This is a program which coonverts .md to .html file",
-  "main": "index.js",
-  "scripts": {
-    "start": "ts-node app.ts",
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "author": "",
-  "license": "MIT",
-  "devDependencies": {
-    "@biomejs/biome": "1.5.3",
-    "@types/node": "^20.11.24",
-    "ts-node": "^10.9.2"
-  },
-  "dependencies": {
-    "@types/minimist": "^1.2.5",
-    "minimist": "^1.2.8"
-  }
+	"name": "md-to-html",
+	"version": "1.0.0",
+	"description": "This is a program which coonverts .md to .html file",
+	"main": "index.js",
+	"scripts": {
+		"start": "ts-node app.ts",
+		"test": "echo \"Error: no test specified\" && exit 1"
+	},
+	"author": "",
+	"license": "MIT",
+	"devDependencies": {
+		"@biomejs/biome": "1.5.3",
+		"@types/node": "^20.11.24",
+		"ts-node": "^10.9.2"
+	},
+	"dependencies": {
+		"@types/minimist": "^1.2.5",
+		"minimist": "^1.2.8"
+	}
 }

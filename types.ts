@@ -1,6 +1,6 @@
 type TPreformattedEntry = {
-	index: number;
-	value: string;
+  index: number;
+  value: string;
 };
 
 type TTagMatch = { entry: string; startIndex: number };
