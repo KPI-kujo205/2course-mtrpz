@@ -19,4 +19,4 @@ In order to use this parser you have to:
 You can specify `--out` flag and a path to the file you want you save your content in
 
 
-Revert commit has is - `11c940880847604f9349a68e8a893d4e37a53355`
+Revert commit hash is - `11c940880847604f9349a68e8a893d4e37a53355`

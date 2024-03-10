@@ -45,6 +45,7 @@ function parseMarkdown(markdown: string) {
 
 	formattedMarkdown = replaceOpeningAndClosingMTags(formattedMarkdown);
 
+	console.log("formattedMarkdown", formattedMarkdown);
 	formattedMarkdown = replaceParagraphs(formattedMarkdown);
 
 	formattedMarkdown = insertPreformattedEntries(
@@ -69,11 +70,14 @@ function replacePreformattedEntries(
 }
 
 function replaceOpeningAndClosingMTags(markdown: string) {
-	const tagsRegex = getTagsRegex("(\\w*)");
+	const tagsRegex = getTagsRegex("([\u0400-\u04FF]*)");
 
+	console.log("tagsRegex", tagsRegex);
 	return markdown.replaceAll(
 		tagsRegex,
 		(match, leftTag, content, rightTag, _offset, _string, _groups) => {
+			console.log("match", match);
+
 			if (leftTag !== rightTag) {
 				throw new Error(
 					`Invalid opening and closing tags or nested tags detected (${match})`,
@@ -93,7 +97,7 @@ function replaceOpeningAndClosingMTags(markdown: string) {
 
 function getTagsRegex(innerContent: string) {
 	const tag = "\\*\\*|_|`";
-	return new RegExp(`(${tag})${innerContent}(${tag})`, "g");
+	return new RegExp(`(${tag})${innerContent}(${tag})`, "gm");
 }
 
 function replaceTagsWithHTML(tag: string, content: string) {
