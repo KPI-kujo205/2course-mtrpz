@@ -14,4 +14,33 @@ describe('Tags replacement', () => {
     const outputMarkdown = '<p><b>bolded text</b></p>';
     expect(parseMarkdownToHtml(inputMarkdown)).toBe(outputMarkdown);
   });
+
+  test('Cursive tag replacement', () => {
+    const inputMarkdown = '_cursive text_';
+    const outputMarkdown = '<p><i>cursive text</i></p>';
+    expect(parseMarkdownToHtml(inputMarkdown)).toBe(outputMarkdown);
+  });
+
+  test('Monospace tag replacement', () => {
+    const inputMarkdown = '`monospace text`';
+    const outputMarkdown = '<p><tt>monospace text</tt></p>';
+    expect(parseMarkdownToHtml(inputMarkdown)).toBe(outputMarkdown);
+  });
+});
+
+describe('Tags replacement error cases', () => {
+  test('Nested tags error', () => {
+    const inputMarkdown = '**_nested tags_**';
+    expect(() => parseMarkdownToHtml(inputMarkdown)).toThrowError();
+  });
+
+  test('Empty tag error', () => {
+    const inputMarkdown = '_ _';
+    expect(() => parseMarkdownToHtml(inputMarkdown)).toThrowError();
+  });
+
+  test('Nested not closed tags', () => {
+    const inputMarkdown = '**_lol`**';
+    expect(() => parseMarkdownToHtml(inputMarkdown)).toThrowError();
+  });
 });
