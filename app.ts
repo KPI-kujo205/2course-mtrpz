@@ -1,33 +1,35 @@
 import { readFileSync, writeFileSync } from 'fs';
 import * as process from 'process';
-import { TPreformattedEntry } from './types';
+import {
+  HTMLReplacer,
+  ANSIEscapeCodesReplacer,
+  wrapContantInHTMLPreTag,
+  wrapContantInANSIPreTag,
+} from './helpers';
+import { TPreformattedEntry, TReplacerFn } from './types';
 import minimist from 'minimist';
 import * as console from 'console';
 
 function main() {
   const pathToInputFile = getInputFilePath();
   const pathToOutputFile = getOutputFilePath();
+
   const fileContent = readFileSync(pathToInputFile).toString();
-  let outContent: string;
+  const html = parseMarkdownToHtml(fileContent);
 
-  const isHtml = isParsedToHtml();
+  const formatFlag = parseFormatFlag();
 
-  if (isHtml) {
-    outContent = parseMarkdownToHtml(fileContent);
+  if (formatFlag === 'html') {
+    process.stdout.write(html);
   } else {
-    outContent = parseMarkdownToANSIEscapeCodes(fileContent);
+    const formattedToANSI = parseMarkdownToANSIEscapeCodes(fileContent);
+    process.stdout.write(formattedToANSI);
   }
 
-  if (!pathToOutputFile) {
-    console.log(outContent);
-    return;
+  if (pathToOutputFile) {
+    const htmlPage = getHTMLPage(html);
+    writeFileSync(pathToOutputFile, htmlPage);
   }
-
-  if (isHtml) {
-    outContent = getHTMLPage(outContent);
-  }
-
-  writeFileSync(pathToOutputFile, outContent);
 }
 
 function getInputFilePath() {
@@ -44,11 +46,22 @@ function getInputFilePath() {
   return args._[0] as string;
 }
 
-function isParsedToHtml() {
+function parseFormatFlag() {
+  const possibleFormats = ['html', 'ansi'];
   const args = minimist(process.argv.slice(2));
-  return !!args?.format;
-}
+  const format = args?.format;
 
+  if ((typeof format === 'boolean' && format) || !format) return 'ansi';
+
+  if (!possibleFormats.some((f) => f === format))
+    throw new Error(
+      `Invalid command line argument specified: --format=${format}
+       Possible formats: ${possibleFormats.join(', ')}
+      `
+    );
+
+  return format;
+}
 function parseMarkdownToHtml(markdown: string) {
   let formattedMarkdown = markdown;
   const preformattedEntries: TPreformattedEntry[] = [];
@@ -58,18 +71,41 @@ function parseMarkdownToHtml(markdown: string) {
     preformattedEntries
   );
 
-  formattedMarkdown = replaceOpeningAndClosingTags(formattedMarkdown);
+  formattedMarkdown = replaceOpeningAndClosingTags(
+    formattedMarkdown,
+    HTMLReplacer
+  );
+
   formattedMarkdown = replaceParagraphs(formattedMarkdown);
   formattedMarkdown = insertPreReplacers(
     formattedMarkdown,
-    preformattedEntries
+    preformattedEntries,
+    wrapContantInHTMLPreTag
   );
 
   return formattedMarkdown;
 }
-
 function parseMarkdownToANSIEscapeCodes(markdown: string) {
-  return markdown;
+  let formattedMarkdown = markdown;
+  const preformattedEntries: TPreformattedEntry[] = [];
+
+  formattedMarkdown = replacePreformattedEntries(
+    formattedMarkdown,
+    preformattedEntries
+  );
+
+  formattedMarkdown = replaceOpeningAndClosingTags(
+    formattedMarkdown,
+    ANSIEscapeCodesReplacer
+  );
+
+  formattedMarkdown = insertPreReplacers(
+    formattedMarkdown,
+    preformattedEntries,
+    wrapContantInANSIPreTag
+  );
+
+  return formattedMarkdown;
 }
 function replacePreformattedEntries(
   markdown: string,
@@ -84,7 +120,10 @@ function replacePreformattedEntries(
   });
 }
 
-function replaceOpeningAndClosingTags(markdown: string) {
+function replaceOpeningAndClosingTags(
+  markdown: string,
+  replacerFunction: TReplacerFn
+) {
   const tagsRegex = getTagsRegex('([\u0400-\u04FF]*)');
 
   return markdown.replaceAll(
@@ -102,7 +141,7 @@ function replaceOpeningAndClosingTags(markdown: string) {
       if (content.trim().length === 0)
         throw new Error(`Empty tags are forbidden ${match}`);
 
-      return replaceTagsWithHTML(leftTag, content);
+      return replacerFunction(leftTag, content);
     }
   );
 }
@@ -110,19 +149,6 @@ function replaceOpeningAndClosingTags(markdown: string) {
 function getTagsRegex(innerContent: string) {
   const tag = '\\*\\*|_|`';
   return new RegExp(`(${tag})${innerContent}(${tag})`, 'gm');
-}
-
-function replaceTagsWithHTML(tag: string, content: string) {
-  switch (tag) {
-    case '**':
-      return `<b>${content}</b>`;
-    case '_':
-      return `<i>${content}</i>`;
-    case '`':
-      return `<tt>${content}</tt>`;
-    default:
-      throw new Error(`Invalid tag: ${tag}`);
-  }
 }
 
 function replaceParagraphs(markdown: string) {
@@ -139,11 +165,14 @@ function replaceParagraphs(markdown: string) {
 
 function insertPreReplacers(
   markdown: string,
-  preformattedEntries: TPreformattedEntry[]
+  preformattedEntries: TPreformattedEntry[],
+  replacer: (arg0: string) => string
 ) {
   let result = markdown;
   for (const entry of preformattedEntries) {
-    const valueWithTag = `<pre>${entry.value.replaceAll(/`/g, '')}</pre>`;
+    const valueWithoutMdTags = entry.value.replaceAll(/`/g, '');
+    const valueWithTag = replacer(valueWithoutMdTags);
+
     result = markdown.replace(new RegExp(`@pre${entry.index}`), valueWithTag);
   }
   return result;
