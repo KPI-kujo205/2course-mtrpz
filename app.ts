@@ -6,18 +6,28 @@ import * as console from 'console';
 
 function main() {
   const pathToInputFile = getInputFilePath();
-  const fileContent = readFileSync(pathToInputFile).toString();
-  const html = parseMarkdown(fileContent);
-
   const pathToOutputFile = getOutputFilePath();
+  const fileContent = readFileSync(pathToInputFile).toString();
+  let outContent: string;
+
+  const isHtml = isParsedToHtml();
+
+  if (isHtml) {
+    outContent = parseMarkdownToHtml(fileContent);
+  } else {
+    outContent = parseMarkdownToANSIEscapeCodes(fileContent);
+  }
 
   if (!pathToOutputFile) {
-    console.log(html);
+    console.log(outContent);
     return;
   }
 
-  const page = getPage(html);
-  writeFileSync(pathToOutputFile, page);
+  if (isHtml) {
+    outContent = getHTMLPage(outContent);
+  }
+
+  writeFileSync(pathToOutputFile, outContent);
 }
 
 function getInputFilePath() {
@@ -34,7 +44,12 @@ function getInputFilePath() {
   return args._[0] as string;
 }
 
-function parseMarkdown(markdown: string) {
+function isParsedToHtml() {
+  const args = minimist(process.argv.slice(2));
+  return !!args?.format;
+}
+
+function parseMarkdownToHtml(markdown: string) {
   let formattedMarkdown = markdown;
   const preformattedEntries: TPreformattedEntry[] = [];
 
@@ -43,12 +58,9 @@ function parseMarkdown(markdown: string) {
     preformattedEntries
   );
 
-  formattedMarkdown = replaceOpeningAndClosingMTags(formattedMarkdown);
-
-  console.log('formattedMarkdown', formattedMarkdown);
+  formattedMarkdown = replaceOpeningAndClosingTags(formattedMarkdown);
   formattedMarkdown = replaceParagraphs(formattedMarkdown);
-
-  formattedMarkdown = insertPreformattedEntries(
+  formattedMarkdown = insertPreReplacers(
     formattedMarkdown,
     preformattedEntries
   );
@@ -56,6 +68,9 @@ function parseMarkdown(markdown: string) {
   return formattedMarkdown;
 }
 
+function parseMarkdownToANSIEscapeCodes(markdown: string) {
+  return markdown;
+}
 function replacePreformattedEntries(
   markdown: string,
   preformattedEntries: TPreformattedEntry[]
@@ -69,15 +84,12 @@ function replacePreformattedEntries(
   });
 }
 
-function replaceOpeningAndClosingMTags(markdown: string) {
+function replaceOpeningAndClosingTags(markdown: string) {
   const tagsRegex = getTagsRegex('([\u0400-\u04FF]*)');
 
-  console.log('tagsRegex', tagsRegex);
   return markdown.replaceAll(
     tagsRegex,
     (match, leftTag, content, rightTag, _offset, _string, _groups) => {
-      console.log('match', match);
-
       if (leftTag !== rightTag) {
         throw new Error(
           `Invalid opening and closing tags or nested tags detected (${match})`
@@ -125,7 +137,7 @@ function replaceParagraphs(markdown: string) {
   return output;
 }
 
-function insertPreformattedEntries(
+function insertPreReplacers(
   markdown: string,
   preformattedEntries: TPreformattedEntry[]
 ) {
@@ -142,7 +154,7 @@ function getOutputFilePath() {
   return args?.out as string;
 }
 
-function getPage(content: string) {
+function getHTMLPage(content: string) {
   return `<!DOCTYPE html><html><head><title>Document</title></head><body>${content}</body></html>`;
 }
 
