@@ -26,6 +26,13 @@ describe('Tags replacement', () => {
     const outputMarkdown = '<p><tt>monospace text</tt></p>';
     expect(parseMarkdownToHtml(inputMarkdown)).toBe(outputMarkdown);
   });
+
+  //this won't work
+  test('Bolded tag replacement', () => {
+    const inputMarkdown = '**bolded text**';
+    const outputMarkdown = '<p><fb>bolded text</fb></p>';
+    expect(parseMarkdownToHtml(inputMarkdown)).toBe(outputMarkdown);
+  });
 });
 
 describe('Tags replacement error cases', () => {
