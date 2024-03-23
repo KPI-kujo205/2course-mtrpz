@@ -8,7 +8,6 @@ import {
 } from './helpers';
 import { TPreformattedEntry, TReplacerFn } from '../types';
 import minimist from 'minimist';
-import * as console from 'console';
 
 function main() {
   const pathToInputFile = getInputFilePath();
@@ -126,11 +125,9 @@ function replaceOpeningAndClosingTags(
 ) {
   const tagsRegex = getTagsRegex('([\u0400-\u04FFA-z\\s]*)');
 
-  console.log(tagsRegex);
   return markdown.replaceAll(
     tagsRegex,
     (match, leftTag, content, rightTag, _offset, _string, _groups) => {
-      console.log(match);
       if (leftTag !== rightTag) {
         throw new Error(
           `Invalid opening and closing tags or nested tags detected (${match})`
