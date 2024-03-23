@@ -1,4 +1,4 @@
-import { TReplacerFn } from './types';
+import { TReplacerFn } from '../types';
 
 const HTMLReplacer: TReplacerFn = (tag: string, content: string) => {
   switch (tag) {

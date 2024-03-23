@@ -6,7 +6,7 @@ import {
   wrapContantInHTMLPreTag,
   wrapContantInANSIPreTag,
 } from './helpers';
-import { TPreformattedEntry, TReplacerFn } from './types';
+import { TPreformattedEntry, TReplacerFn } from '../types';
 import minimist from 'minimist';
 import * as console from 'console';
 
@@ -124,11 +124,13 @@ function replaceOpeningAndClosingTags(
   markdown: string,
   replacerFunction: TReplacerFn
 ) {
-  const tagsRegex = getTagsRegex('([\u0400-\u04FF]*)');
+  const tagsRegex = getTagsRegex('([\u0400-\u04FFA-z\\s]*)');
 
+  console.log(tagsRegex);
   return markdown.replaceAll(
     tagsRegex,
     (match, leftTag, content, rightTag, _offset, _string, _groups) => {
+      console.log(match);
       if (leftTag !== rightTag) {
         throw new Error(
           `Invalid opening and closing tags or nested tags detected (${match})`
@@ -187,9 +189,4 @@ function getHTMLPage(content: string) {
   return `<!DOCTYPE html><html><head><title>Document</title></head><body>${content}</body></html>`;
 }
 
-try {
-  main();
-} catch (e) {
-  console.error(e);
-  process.exit(1);
-}
+export { main, parseMarkdownToHtml };
