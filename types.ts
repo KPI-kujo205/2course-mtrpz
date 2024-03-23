@@ -3,6 +3,6 @@ type TPreformattedEntry = {
   value: string;
 };
 
-type TTagMatch = { entry: string; startIndex: number };
+type TReplacerFn = (tag: string, content: string) => string;
 
-export type { TPreformattedEntry, TTagMatch };
+export type { TPreformattedEntry, TReplacerFn };
