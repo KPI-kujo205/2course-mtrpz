@@ -18,5 +18,15 @@ In order to use this parser you have to:
 # Options
 You can specify `--out` flag and a path to the file you want you save your content in
 
+# Examples
+You can use text stored in EXAMPLE.md file in order to test this parser
+
+Enter
+ 
+```bash
+npm start EXAMPLE.md
+```
+and this the output in your terminal
+
 
 Revert commit hash is - `11c940880847604f9349a68e8a893d4e37a53355`
