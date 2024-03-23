@@ -30,7 +30,7 @@ describe('Tags replacement', () => {
   //this won't work
   test('Bolded tag replacement', () => {
     const inputMarkdown = '**bolded text**';
-    const outputMarkdown = '<p><fb>bolded text</fb></p>';
+    const outputMarkdown = '<p><fbd>bolded text</fbd></p>';
     expect(parseMarkdownToHtml(inputMarkdown)).toBe(outputMarkdown);
   });
 });
