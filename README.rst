@@ -1,43 +1,40 @@
-=======================
-Simple web app (python)
-=======================
+=================
+Simple golang app
+=================
 
 This is a starter project for the third laboratory assignment on containerization.
-This project is written in `Python <https://www.python.org/>`_ programming
-language and uses `FastAPI <https://fastapi.tiangolo.com/>`_ framework.
 
 How to run
 ==========
 
-As the project is written in Python, you will need Python installed.
-Recommended version of Python is 3.7 and above.
+You will need `golang <https://go.dev/doc/install>`_ toolchain installed in
+order to compile this project.
 
-Firstly, prepare the environment:
-
-.. code-block:: console
-
-   solo@falcon ~/project $ python -m venv ./.venv
-
-As virtual environment is created for you, enter it and install project
-dependencies:
+Build the project with the following command:
 
 .. code-block:: console
 
-   solo@falcon ~/project $ . ./.venv/bin/acticate
-   (.venv) solo@falcon ~/project $ pip install -r requirements/backend.in
-   Collecting fastapi
-   ...
-   Installing collected packages: sniffio, idna ...
-   Successfully installed PyYAML-6.0 ...
+   solo@falcon ~/project $ go build -o build/fizzbuzz
 
-As the dependencies are installed you can start the project using the following
-command:
+When you have the project built, you can run it by invoking the binary:
 
 .. code-block:: console
 
-   (.venv) solo@falcon ~/project $ uvicorn spaceship.main:app --host=0.0.0.0 --port=8080
-   INFO:     Started server process [16689]
-   INFO:     Waiting for application startup.
-   INFO:     Application startup complete.
+   solo@falcon ~/project $ ./build/fizzbuzz
+   Usage:
+     fizzbuzz [command]
 
-Open http://127.0.0.1:8080/ in your browser to see the main project page.
+   Available Commands:
+     completion  Generate the autocompletion script for the specified shell
+     help        Help about any command
+     query       Query if the number is fizz/buzz or fizzbuzz
+     serve       Run an http server to anser fizzbuzz queries
+
+   Flags:
+     -h, --help   help for fizzbuzz
+
+   solo@falcon ~/project $ ./build/fizzbuzz serve
+   Listening on http://0.0.0.0:8080
+
+When serving a project, press Ctrl+C to sent SIGTERM signal to the running
+server and bring it down.
