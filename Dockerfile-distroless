@@ -1,0 +1,19 @@
+FROM node:16.17-alpine as build
+
+WORKDIR /usr/src/app
+
+COPY package*.json ./
+
+RUN npm ci --production
+
+COPY . .
+
+FROM gcr.io/distroless/nodejs:16
+
+WORKDIR /usr/src/app
+
+COPY --from=build /usr/src/app .
+
+EXPOSE 8080
+
+CMD [ "app.js" ]
